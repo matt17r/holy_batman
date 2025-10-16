@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(rails quotes:analyze:*)",
+      "Bash(bundle exec rails:*)",
+      "Bash(rails generate:*)",
+      "Bash(cat:*)",
+      "Bash(test:*)",
+      "Bash(bin/rails test:*)",
+      "Bash(bin/rails runner:*)",
+      "Bash(bin/rails db:seed:*)"
     ],
     "deny": [],
     "ask": []

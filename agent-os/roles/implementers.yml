@@ -1,0 +1,18 @@
+implementers:
+  - id: database-engineer
+    name: Database Engineer
+    description: Handles database migrations, models, schemas, and database queries
+    agent_file: database-engineer.md
+    verified_by: backend-verifier
+
+  - id: backend-engineer
+    name: Backend Engineer
+    description: Handles API endpoints, controllers, business logic, data processing, and backend functionality
+    agent_file: api-engineer.md
+    verified_by: backend-verifier
+
+  - id: testing-engineer
+    name: Testing Engineer
+    description: Handles test files, test coverage, and test fixtures
+    agent_file: testing-engineer.md
+    verified_by: backend-verifier

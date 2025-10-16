@@ -1,9 +1,22 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+# frozen_string_literal: true
+
+# Load master quotes data
+require_relative 'data/master_quotes'
+
+puts "Seeding quotes database..."
+puts "Loading #{MASTER_QUOTES.count} quotes from master data..."
+
+# Use idempotent pattern: find_or_initialize_by with explicit ID
+MASTER_QUOTES.each do |data|
+  quote = Quote.find_or_initialize_by(id: data[:id])
+  quote.assign_attributes(
+    text: data[:text],
+    slug: data[:slug],
+    context: data[:context]
+  )
+  quote.save!
+end
+
+puts "Seeding complete!"
+puts "Total quotes in database: #{Quote.count}"
+puts "ID range: #{Quote.minimum(:id)} - #{Quote.maximum(:id)}"

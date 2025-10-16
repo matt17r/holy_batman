@@ -1,6 +1,6 @@
 # Product Roadmap
 
-1. [ ] Quote Model & Database Seeding — Create Quote model with fields for text and context, then seed the database with a comprehensive collection of Robin's iconic "Holy ___" exclamations from the 1960s Batman TV series. Include validation and ensure quotes are unique. `S`
+1. [x] Quote Model & Database Seeding — Create Quote model with fields for text and context, then seed the database with a comprehensive collection of Robin's iconic "Holy ___" exclamations from the 1960s Batman TV series. Include validation and ensure quotes are unique. `S`
 
 2. [ ] Basic Quote Display Page — Build the core landing page that displays a random quote from the database using Rails views and Hotwire Turbo. Include basic styling with dark background and quote text prominently displayed. `XS`
 

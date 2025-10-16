@@ -1,0 +1,9 @@
+verifiers:
+  - id: backend-verifier
+    name: Backend Verifier
+    description: Verifies database and API implementations, tests backend functionality
+    agent_file: backend-verifier.md
+    verifies:
+      - database-engineer
+      - backend-engineer
+      - testing-engineer

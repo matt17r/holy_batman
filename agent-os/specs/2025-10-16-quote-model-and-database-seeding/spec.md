@@ -1,51 +1,71 @@
 # Specification: Quote Model & Database Seeding
 
 ## Goal
-Create a simple Quote model to store Robin's iconic "Holy ___" exclamations from the 1960s Batman TV series, then seed the database with ~360 quotes sourced from two markdown files. Keep it vanilla Rails with no over-engineering.
+Create a Quote model to store Robin's iconic "Holy ___" exclamations from the 1960s Batman TV series and seed the database with a comprehensive collection of ~360 quotes parsed from two markdown source files. Keep it super simple - vanilla Rails with no over-engineering.
 
 ## User Stories
-- As a developer, I want to store quotes in a database so that the application can retrieve and display them
-- As a developer, I want each quote to have a unique 3-digit ID starting at 100 so that permalinks are clean and consistent
-- As a developer, I want to run the seed script multiple times without creating duplicates so that database seeding is idempotent
+- As a Batman fan, I want to browse Robin's iconic "Holy" quotes so that I can relive memorable moments from the classic TV series
+- As a developer, I want quotes to have unique, predictable 3-digit IDs starting at 100 so that permalinks remain stable across environments
+- As a developer, I want the seed data to be idempotent so that I can safely run it multiple times without creating duplicates
 - As a developer, I want slugs auto-generated from quote text so that URLs can be human-readable in the future
 - As a future developer, I want an optional context field so that I can add easter egg content similar to XKCD comics
 
 ## Core Requirements
 
 ### Functional Requirements
-- Quote model with fields: id (starting at 100), text (required), slug (optional), context (optional), timestamps
-- Text must be unique (case-insensitive) across all quotes
-- Slug must be unique when present
-- Extract ~360 quotes from buzzfeed and fandom markdown files
-- Auto-generate slugs from quote text using parameterization
-- Assign sequential IDs starting at 100 (quotes will have IDs 100-459(ish))
-- Seed script must be idempotent using explicit ID assignment
-- Permalink pattern: `/:id` (e.g., /100, /101, /102)
+- Create Quote model with the following attributes:
+  - id: Primary key, starting at 100 (all IDs are 3 digits: 100-458)
+  - text: The quote text (required, case-insensitive unique)
+  - slug: URL-friendly version of the quote (optional, unique if present)
+  - context: Optional field for future easter egg content (XKCD-style alt text)
+  - timestamps: Standard created_at and updated_at
+- Parse quotes from two markdown source files:
+  - `planning/visuals/quote-list-buzzfeed.md` (359 quotes, ranked order)
+  - `planning/visuals/quote-list-fandom.md` (360 quotes, alphabetical)
+- Auto-generate slugs from quote text using Rails parameterize method
+- Handle slug uniqueness conflicts manually during seed data preparation
+- Seed database with explicit IDs for idempotency (100-458)
+- Support permalink pattern: `/:id` (e.g., /100, /101, /102)
 
 ### Non-Functional Requirements
-- Keep implementation super simple and vanilla Rails
-- No admin interface, soft deletes, versioning, or edit history
-- Use standard Rails conventions for model, migration, and seed files
-- Seed script should be safe to run multiple times without errors
+- Keep implementation super simple - vanilla Rails, no over-engineering
+- Ensure seed script is idempotent (safe to run multiple times)
+- Case-insensitive uniqueness for quote text
+- Slug uniqueness must be enforced at database level
+- All quote IDs must be exactly 3 digits (100+)
 
 ## Visual Design
-- No visual design needed for this spec (data model only)
-- Visual assets provided:
-  - `planning/visuals/quote-list-buzzfeed.md` containing 359 quotes
-  - `planning/visuals/quote-list-fandom.md` containing 360 quotes
+
+### Data Source References
+- `planning/visuals/quote-list-buzzfeed.md`: Contains 359 quotes in "ranked" order (descending)
+- `planning/visuals/quote-list-fandom.md`: Contains 360 quotes in alphabetical order
+- `planning/visuals/XKCD.png`: Reference image showing:
+  - prev, random, next button layout
+  - alt text easter egg concept (for future context field use)
+  - permalink pattern
+
+### Data Characteristics
+- BuzzFeed list: 359 quotes in ranked order
+- Fandom list: 360 quotes alphabetically sorted
+- Some quotes appear in both with spelling variations
+- Need to consolidate, deduplicate, and resolve spelling differences
+- Context field inspired by XKCD's hover text easter eggs (empty in v1)
 
 ## Reusable Components
 
 ### Existing Code to Leverage
 - ApplicationRecord base class at `app/models/application_record.rb`
-- Standard Rails migration patterns (no existing migrations to reference)
-- Standard Rails seed patterns at `db/seeds.rb` (currently empty with example commented out)
+- Standard Rails migration patterns
+- Standard Rails seed patterns at `db/seeds.rb`
 - SQLite3 database configuration at `config/database.yml`
 
+Note: This is a brand new Rails application with minimal existing code to reference.
+
 ### New Components Required
-- Quote model (doesn't exist yet)
-- Create quotes migration (first migration in the app)
-- Seed script logic to parse HTML and populate quotes
+- Quote model: New ActiveRecord model with validations
+- Migration: Create quotes table with unique indexes and ID sequencing
+- Master data file: Consolidated, deduplicated quote data with explicit IDs
+- Seed script: Idempotent database seeding logic
 
 ## Technical Approach
 
@@ -63,8 +83,13 @@ Table name: `quotes`
 
 Indexes:
 - Primary key index on id (automatic)
-- Unique index on text (case-insensitive)
-- Unique index on slug (when present)
+- Unique index on text column
+- Unique index on slug column
+
+ID Sequencing:
+- Use SQLite-specific approach to set starting ID to 100
+- Insert dummy row with ID 99, then delete it
+- This sets the sequence counter so next insert gets ID 100
 
 ### Model Validations
 File: `app/models/quote.rb`
@@ -72,39 +97,51 @@ File: `app/models/quote.rb`
 Validations:
 - `validates :text, presence: true, uniqueness: { case_sensitive: false }`
 - `validates :slug, uniqueness: true, allow_nil: true`
-- `before_validation :generate_slug_from_text, on: :create` (if slug is blank)
+- `before_validation :generate_slug_from_text, on: :create`
 
 Slug generation logic:
-- Parameterize the text field: `text.parameterize`
+- Auto-generate slug from text field using `text.parameterize`
+- Only generate if slug is blank and text is present
 - Example: "Holy Holocaust" becomes "holy-holocaust"
-- Handle duplicates manually during seeding (add suffix like "-2", "-3" if needed)
+- Duplicate slugs must be handled manually during seed data preparation
 
 ### Migration Details
 File: `db/migrate/YYYYMMDDHHMMSS_create_quotes.rb`
 
-Key migration steps:
-1. Create quotes table with all columns
-2. Add unique index on text with case-insensitive collation
-3. Add unique index on slug
-4. Starting ID not required as we'll explicitly set IDs and SQLite will continue on with next available ID if more are added in the future.
+Migration steps:
+1. Create quotes table with all columns (id, text, slug, context, timestamps)
+2. Add unique index on text column
+3. Add unique index on slug column
+4. Execute SQL to set starting ID to 100:
+   - Insert dummy row with ID 99
+   - Delete the dummy row
+   - Next auto-increment value will be 100
 
-### Seed Script Approach
+### Data Preparation Process
+This happens during seed development, not at runtime:
+
+1. Parse both markdown source files to extract quote text
+2. Compare BuzzFeed and Fandom lists
+3. Identify quotes in both sources
+4. Resolve spelling variations (e.g., "Armor" vs "Armour", special characters)
+5. Consolidate to final deduplicated list (~359 unique quotes)
+6. Generate slugs using parameterize
+7. Check for slug collisions and resolve manually if needed
+8. Assign sequential IDs starting at 100
+9. Create master data file at `db/data/master_quotes.rb`
+10. Document resolution decisions in master data file header
+
+### Seed Script Implementation
 File: `db/seeds.rb`
 
-High-level algorithm:
-1. Read markdown files from `agent-os/specs/2025-10-16-quote-model-and-database-seeding/planning/visuals/quote-list-buzzfeed.md` and `agent-os/specs/2025-10-16-quote-model-and-database-seeding/planning/visuals/quote-list-fandom.md`
-2. Sort the buzzfeed list alphabetically
-3. Compare the two lists and highlight any discrepancies
-4. Extract clean deduplicated quote text
-5. Generate slug from each quote text
-6. Build array of quote data with explicit IDs starting at 100
-7. Use `find_or_initialize_by(id: X)` to ensure idempotency
-8. Update attributes and save
-9. If any conflicts prevent saving, stop and let me tidy them up
+Approach:
+- Load quotes data from `db/data/master_quotes.rb` constant
+- Use idempotent pattern with explicit ID assignment
+- Display progress and summary statistics
 
 Idempotency pattern:
 ```ruby
-quotes_data.each do |data|
+MASTER_QUOTES.each do |data|
   quote = Quote.find_or_initialize_by(id: data[:id])
   quote.assign_attributes(
     text: data[:text],
@@ -115,36 +152,57 @@ quotes_data.each do |data|
 end
 ```
 
-Slug duplicate handling:
-- During development of seed script, **DO NOT** check for duplicate slugs
+Master data file format:
+- Ruby constant `MASTER_QUOTES` containing array of hashes
+- Each hash has: id, text, slug, context (nil)
+- Header comment documenting source, generation date, and resolution decisions
+- Explicit IDs starting at 100
 
 ### Testing Strategy
-- Model validations should be tested (presence, uniqueness)
-- Seed script should be runnable multiple times without errors
-- Verify all quotes are created with IDs 100-459(ish)
-- Verify no duplicate text or slugs exist after seeding
-- Test that running seed script twice doesn't create duplicate quotes
+Model tests:
+- Test text presence validation
+- Test text case-insensitive uniqueness
+- Test slug uniqueness (when present)
+- Test slug auto-generation from text
+- Test slug not overwritten if manually set
+
+Integration tests:
+- Test seed script runs without errors
+- Test seed script is idempotent (can run multiple times)
+- Verify all quotes created with correct ID range (100-458)
+- Verify no duplicate text or slugs after seeding
 
 ## Out of Scope
+- Character name field (only Robin quotes for v1)
 - Admin interface for managing quotes
-- API endpoints for quotes (will be added later)
+- API endpoints for quotes
 - Search functionality
 - Soft deletes or versioning
 - Edit history or audit trail
-- Character name field (only Robin quotes for v1)
+- Length validation on text field
 - Episode number, season, or air date metadata
 - Popularity ratings or view counts
 - Tags or categories
 - Authentication or authorization
-- Front-end views (separate spec)
+- Frontend views (separate spec)
+- Multiple character support
+- Quote editing or updating UI
 
 ## Success Criteria
-- Quote model exists with all specified fields and validations
-- Migration successfully creates quotes table with ID starting at 100
-- Seed script parses HTML and creates exactly 359 quotes
-- All quotes have IDs from 100 to 458
-- All quotes have unique text (case-insensitive)
-- All quotes have unique slugs (or null)
-- Running `rails db:seed` multiple times is safe and idempotent
-- No BuzzFeed article numbers are stored in the database
-- Slugs are properly parameterized (e.g., "holy-holocaust", "holy-banks")
+- Quote model created with all specified fields and validations
+- Database migration runs successfully and sets ID sequence to 100
+- Migration is reversible (can be rolled back)
+- All quotes from both sources are parsed and analyzed
+- Spelling variations between sources are identified and resolved
+- Final master data contains 359 unique quotes (after deduplication)
+- Quotes are assigned IDs 100-458 (sequential, 3 digits)
+- All quotes have valid, unique slugs
+- No slug conflicts exist
+- Seed script loads and creates all quotes without errors
+- Seed script can be run multiple times safely (idempotent)
+- Running seed twice does not create duplicate quotes
+- Model validations prevent duplicate quotes at application level
+- Database constraints enforce uniqueness at database level
+- Quote.count returns 359 after seeding
+- Quote.minimum(:id) returns 100
+- Quote.maximum(:id) returns 458
