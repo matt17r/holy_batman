@@ -11,7 +11,8 @@
       "Bash(bin/rails runner:*)",
       "Bash(bin/rails db:seed:*)",
       "WebFetch(domain:localhost)",
-      "Bash(bin/rails test:system:*)"
+      "Bash(bin/rails test:system:*)",
+      "Bash(bin/kamal config:*)"
     ],
     "deny": [],
     "ask": []
