@@ -1,0 +1,30 @@
+# Test fixtures for quotes
+one:
+  id: 100
+  text: "Holy agility!"
+  context: "Batman's death-defying leap"
+  slug: "holy-agility"
+
+two:
+  id: 101
+  text: "Holy astringent plum-like fruit!"
+  context: "The master computer knows all about us"
+  slug: "holy-astringent-plum-like-fruit"
+
+three:
+  id: 102
+  text: "Holy alphabet!"
+  context: "Will Robin be pecked to death?"
+  slug: "holy-alphabet"
+
+four:
+  id: 103
+  text: "Holy asp!"
+  context: "Batman clears the Sphinx"
+  slug: "holy-asp"
+
+five:
+  id: 104
+  text: "Holy armadillo!"
+  context: "Atomic batteries to power, turbines to speed"
+  slug: "holy-armadillo"

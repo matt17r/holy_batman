@@ -9,7 +9,9 @@
       "Bash(test:*)",
       "Bash(bin/rails test:*)",
       "Bash(bin/rails runner:*)",
-      "Bash(bin/rails db:seed:*)"
+      "Bash(bin/rails db:seed:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(bin/rails test:system:*)"
     ],
     "deny": [],
     "ask": []

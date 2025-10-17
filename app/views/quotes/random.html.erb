@@ -1,0 +1,11 @@
+<div class="relative group max-w-5xl">
+  <p class="quote-text text-4xl md:text-6xl xl:text-8xl text-white text-center font-black leading-tight px-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+    <%= @quote.text %>
+  </p>
+
+  <% if @quote.context.present? %>
+    <div class="quote-tooltip hidden group-hover:block absolute left-1/2 transform -translate-x-1/2 top-full mt-8 bg-gray-800 text-gray-100 px-6 py-3 rounded-lg text-base text-center z-20 shadow-2xl border-2 border-yellow-400">
+      <%= @quote.context %>
+    </div>
+  <% end %>
+</div>
